@@ -13,6 +13,46 @@ st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
 st.title("📊 Limpieza y Reporte de Tiendas")
 st.markdown("##### ¿Tienes alguna sugerencia? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
 
+st.markdown("""
+### 🧠 ¿Qué hace esta app?
+
+Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`). Los reportes incluyen:
+
+- 🚚 Métricas clave de desempeño (órdenes, GMV, cancelaciones, tasas, etc.)
+- 📈 Análisis de variación semana a semana (WoW)
+- 📊 Comparación contra el promedio de las últimas 4 semanas (LW_vs_Avg_L4)
+- 🔴 Alertas automáticas si más del 40% de las métricas bajaron
+
+---
+
+### 🪄 ¿Qué obtendrás?
+
+- Un archivo procesado y limpio
+- Dos reportes: uno por **marca** y otro por **tienda**
+- Una versión **formateada** para Excel, lista para compartir
+- Indicadores claros y visuales sobre desempeño
+
+---
+
+### 📌 ¿Cómo usarla? Paso a paso:
+
+1. **Descarga tu dataset crudo** desde el portal de análisis ad-hoc:
+   [🔗 Ir al Portal](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D6657)
+
+2. **Carga el archivo .csv** en esta app.
+
+3. Espera unos segundos mientras procesamos los datos.
+
+4. Visualiza y descarga los reportes generados:
+
+   - Reporte por `shop_name`
+   - Reporte por `all_brand`
+   - Versión formateada para Excel
+
+---
+
+""")
+
 
 st.markdown("""
 👩‍💻 Genera tu dataset aquí:  
