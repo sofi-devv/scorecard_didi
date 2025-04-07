@@ -41,7 +41,7 @@ if uploaded_file:
 # Reordenar métricas en el orden solicitado
     orden_metricas = [
         'Online Store', 'Active Stores', 'GMV', 'complete_order_cnt', 'pay_order_cnt',
-        'Completion rate', 'ticket_promedio', 'B-cancel rate', 'r_burn', 'b2c_total', 'p2c_total', 'online rate %'
+        'Completion rate', 'ticket_promedio', 'B-cancel rate', 'r_burn', 'b2c_total', 'p2c_total', 'online rate %', 'order_price'
     ]
     reporte['Metric'] = pd.Categorical(reporte['Metric'], categories=orden_metricas, ordered=True)
     reporte = reporte.sort_values(['shop_name' if 'shop_name' in reporte.columns else 'all_brand', 'Metric'])
