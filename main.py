@@ -14,7 +14,7 @@ st.title("📊 Limpieza y Reporte de Tiendas")
 
 st.markdown("""
 👩‍💻 Genera tu dataset aquí:  
-[🔗 Ir al Portal](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D6655)
+[🔗 Ir al Portal](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D6657)
 """)
 
 uploaded_file = st.file_uploader("📂 Carga tu archivo Excel o CSV", type=["xlsx", "csv"])
@@ -36,16 +36,22 @@ if uploaded_file:
     else:
         reporte = generar_reporte_shop_name_final(df_clean)
 
+# Reordenar métricas en el orden solicitado
+    orden_metricas = [
+        'Online Store', 'Active Stores', 'GMV', 'complete_order_cnt', 'pay_order_cnt',
+        'Completion rate', 'ticket_promedio', 'B-cancel rate', 'r_burn', 'b2c_total', 'p2c_total', 'online rate %'
+    ]
+    reporte['Metric'] = pd.Categorical(reporte['Metric'], categories=orden_metricas, ordered=True)
+    reporte = reporte.sort_values(['shop_name' if 'shop_name' in reporte.columns else 'all_brand', 'Metric'])
+
     # Mostrar resultados
     st.subheader("📋 Resultado del Reporte")
     st.dataframe(formatear_reporte_excel(reporte), use_container_width=True)
 
-
-    # Formatear para Excel
-    reporte_formateado = formatear_reporte_excel(reporte)
+    # Guardar como Excel
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-        reporte_formateado.to_excel(writer, index=False, sheet_name='Reporte')
+        formatear_reporte_excel(reporte).to_excel(writer, index=False, sheet_name='Reporte')
 
     excel_buffer.seek(0)
 
