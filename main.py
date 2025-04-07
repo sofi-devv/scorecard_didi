@@ -11,6 +11,8 @@ import io
 
 st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
 st.title("📊 Limpieza y Reporte de Tiendas")
+st.markdown("### ¿Tienes alguna sugerencia para el título? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
+
 
 st.markdown("""
 👩‍💻 Genera tu dataset aquí:  
