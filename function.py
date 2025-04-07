@@ -36,6 +36,8 @@ def limpiar_dataset(df):
             return "Olimpica"
         elif brand == "La Vaquita Grocery_CO":
             return "La Vaquita"
+        elif brand == "Home Sentry Grocery_CO":
+            return "Home Sentry"
         else:
             return None
 
