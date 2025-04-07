@@ -39,7 +39,7 @@ def limpiar_dataset(df):
         elif brand == "Home Sentry Grocery_CO":
             return "Home Sentry"
         else:
-            return None
+            return brand
 
     df['all_brand'] = df['brand_name'].apply(asignar_all_brand)
 
