@@ -10,29 +10,14 @@ from function import (
 import io
 
 st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
-st.title("📊 Limpieza y Reporte de Tiendas")
-st.markdown("##### ¿Tienes alguna sugerencia? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
+st.title("📊 Scorecard generator")
+st.markdown("¿Tienes alguna sugerencia? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
 
 st.markdown("""
 ### 🧠 ¿Qué hace esta app?
 
-Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`). Los reportes incluyen:
+Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`).
 
-- 🚚 Métricas clave de desempeño (órdenes, GMV, cancelaciones, tasas, etc.)
-- 📈 Análisis de variación semana a semana (WoW)
-- 📊 Comparación contra el promedio de las últimas 4 semanas (LW_vs_Avg_L4)
-- 🔴 Alertas automáticas si más del 40% de las métricas bajaron
-
----
-
-### 🪄 ¿Qué obtendrás?
-
-- Un archivo procesado y limpio
-- Dos reportes: uno por **marca** y otro por **tienda**
-- Una versión **formateada** para Excel, lista para compartir
-- Indicadores claros y visuales sobre desempeño
-
----
 
 ### 📌 ¿Cómo usarla? Paso a paso:
 
@@ -45,19 +30,14 @@ Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticame
 
 4. Visualiza y descarga los reportes generados:
 
-   - Reporte por `shop_name`
-   - Reporte por `all_brand`
+   - Reporte por `nombre de la tienda`
+   - Reporte por `Marca`
    - Versión formateada para Excel
 
 ---
 
 """)
 
-
-st.markdown("""
-👩‍💻 Genera tu dataset aquí:  
-[🔗 Ir al Portal](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D6657)
-""")
 
 uploaded_file = st.file_uploader("📂 Carga tu archivo Excel o CSV", type=["xlsx", "csv"])
 
