@@ -10,13 +10,13 @@ from function import (
 import io
 
 st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
-st.title("📊 Scorecard generator")
+st.title("📊 Scorecard")
 st.markdown("¿Tienes alguna sugerencia? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
 
 st.markdown("""
 ### 🧠 ¿Qué hace esta app?
 
-Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`).
+Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`). Los reportes incluyen:
 
 
 ### 📌 ¿Cómo usarla? Paso a paso:

@@ -162,8 +162,9 @@ def generar_reporte_all_brand_final(df):
     else:
         df_pivot['LW_vs_Avg_L4'] = np.nan
 
-    alerta_dict = df_pivot.groupby('all_brand')['WoW'].apply(lambda x: (x < 0).mean() > 0.4).to_dict()
-    df_pivot['Attention'] = df_pivot['all_brand'].map(lambda x: '🔴 Attention!' if alerta_dict.get(x, False) else '')
+    gmv_wow = df_pivot[df_pivot['Metric'] == 'GMV']
+    alerta_dict = gmv_wow.set_index('shop_name')['WoW'] < 0
+    df_pivot['Attention'] = df_pivot['shop_name'].map(lambda x: '🔴 Attention!' if alerta_dict.get(x, False) else '')
 
     return df_pivot
 
@@ -236,7 +237,8 @@ def generar_reporte_shop_name_final(df):
     else:
         df_pivot['LW_vs_Avg_L4'] = np.nan
 
-    alerta_dict = df_pivot.groupby('shop_name')['WoW'].apply(lambda x: (x < 0).mean() > 0.4).to_dict()
+    gmv_wow = df_pivot[df_pivot['Metric'] == 'GMV']
+    alerta_dict = gmv_wow.set_index('shop_name')['WoW'] < 0
     df_pivot['Attention'] = df_pivot['shop_name'].map(lambda x: '🔴 Attention!' if alerta_dict.get(x, False) else '')
 
     return df_pivot
