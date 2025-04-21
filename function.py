@@ -12,9 +12,7 @@ def limpiar_dataset(df):
         df['GMV'] = 0
 
     def asignar_all_brand(brand):
-        if brand in ["Plass Nueva Botella CO", "Plass Smoke & Vape Grocery_CO"]:
-            return "Plass"
-        elif brand in [
+        if brand in [
             "Cencosud(Jumbo) Grocery_CO", "Cencosud(Metro) Grocery_CO",
             "Cencosud(Jumbo Express) Grocery_CO", "Cencosud(EASY) Grocery_CO"
         ]:
