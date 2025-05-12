@@ -29,6 +29,10 @@ def limpiar_dataset(df):
             return "La Vaquita"
         elif brand == "Home Sentry Grocery_CO":
             return "Home Sentry"
+        elif brand == "Plass Smoke & Vape Grocery_CO":
+            return "Plass"
+        elif brand == "Plass Nueva Botella CO":
+            return "Plass"
         else:
             return brand
 
