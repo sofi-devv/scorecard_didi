@@ -2,87 +2,67 @@
 import streamlit as st
 import pandas as pd
 from function import (
-    limpiar_dataset,
-    generar_reporte_all_brand_final,
-    generar_reporte_shop_name_final,
-    formatear_reporte_excel
+    # CAMBIO 1: Importamos las nuevas funciones y la lista de métricas
+    limpiar_y_preparar_datos,
+    generar_scorecard,
+    formatear_reporte,
+    METRICAS_ORDENADAS
 )
 import io
 
+# --- Configuración de la página (sin cambios) ---
 st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
-st.title("📊 Scorecard")
-st.markdown("¿Tienes alguna sugerencia? Contáctame en D-Chat: ptorresrodriguez_i@didiglobal.com")
+st.title("📊 Scorecard Semanal de Tiendas")
 
-st.markdown("""
-### 🧠 ¿Qué hace esta app?
-
-Esta herramienta te permite cargar un dataset crudo de tiendas y **automáticamente limpiarlo, organizarlo y transformarlo** en reportes semanales por marca (`all_brand`) y por tienda (`shop_name`). Los reportes incluyen:
-
-
-### 📌 ¿Cómo usarla? Paso a paso:
-
-1. **Descarga tu dataset crudo** desde el portal de análisis ad-hoc:
-   [🔗 Ir al Portal](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D6657)
-
-2. **Carga el archivo .csv** en esta app.
-
-3. Espera unos segundos mientras procesamos los datos.
-
-4. Visualiza y descarga los reportes generados:
-
-   - Reporte por `nombre de la tienda`
-   - Reporte por `Marca`
-   - Versión formateada para Excel
-
----
-
-""")
-
-
-uploaded_file = st.file_uploader("📂 Carga tu archivo Excel o CSV", type=["xlsx", "csv"])
+# --- Carga de Archivo ---
+uploaded_file = st.file_uploader("📂 Carga tu archivo CSV", type=["csv"])
 
 if uploaded_file:
-    file_type = uploaded_file.name.split('.')[-1]
-    df = pd.read_excel(uploaded_file) if file_type == 'xlsx' else pd.read_csv(uploaded_file)
+    try:
+        df = pd.read_csv(uploaded_file)
+        
+        # --- Procesamiento de Datos ---
+        # CAMBIO 2: Usamos el nuevo nombre de la función de limpieza
+        df_clean = limpiar_y_preparar_datos(df.copy())
 
+        st.markdown("---")
+        st.header("📊 Generar Reporte Semanal")
+        
+        tipo_reporte = st.radio(
+            "Selecciona el nivel de agregación:", 
+            ["Por Marca (brand_name)", "Por Tienda (shop_name)"]
+        )
 
-    df_clean = limpiar_dataset(df)
+        # CAMBIO 3: Usamos la función 'generar_scorecard' para ambos casos
+        if tipo_reporte == "Por Marca (brand_name)":
+            reporte = generar_scorecard(df_clean, METRICAS_ORDENADAS, grouping_level='brand_name')
+        else:
+            reporte = generar_scorecard(df_clean, METRICAS_ORDENADAS, grouping_level='shop_name')
 
-    # Selección de tipo de reporte
-    st.markdown("---")
-    st.header("📊 Reportes Semanales")
-    tipo_reporte = st.radio("Selecciona el tipo de reporte:", ["Por Marca (all_brand)", "Por Tienda (shop_name)"])
+        # CAMBIO 4: Se ELIMINA el código de ordenamiento manual.
+        # La función 'generar_scorecard' ya se encarga del ordenamiento y la estructura.
+        # Esto hace que el main.py sea mucho más limpio.
 
-    if tipo_reporte == "Por Marca (all_brand)":
-        reporte = generar_reporte_all_brand_final(df_clean)
-    else:
-        reporte = generar_reporte_shop_name_final(df_clean)
+        # --- Mostrar Resultados ---
+        st.subheader("📋 Vista Previa del Reporte")
+        # CAMBIO 5: Usamos la nueva función de formato
+        st.dataframe(formatear_reporte(reporte), use_container_width=True, height=600)
 
-# Reordenar métricas en el orden solicitado
-    orden_metricas = [
-        'Online Store', 'Active Stores', 'GMV', 'complete_order_cnt', 'pay_order_cnt',
-        'Completion rate', 'ticket_promedio', 'B-cancel rate', 'r_burn', 'b2c_total', 'p2c_total', 'online rate %', 'order_price'
-    ]
-    reporte['Metric'] = pd.Categorical(reporte['Metric'], categories=orden_metricas, ordered=True)
-    reporte = reporte.sort_values(['shop_name' if 'shop_name' in reporte.columns else 'all_brand', 'Metric'])
+        # Preparar archivo para descarga
+        excel_buffer = io.BytesIO()
+        # CAMBIO 6: Usamos la función de formato también para el Excel
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            formatear_reporte(reporte).to_excel(writer, index=False, sheet_name='Reporte')
+        excel_buffer.seek(0)
 
-    # Mostrar resultados
-    st.subheader("📋 Resultado del Reporte")
-    st.dataframe(formatear_reporte_excel(reporte), use_container_width=True)
-
-    # Guardar como Excel
-    excel_buffer = io.BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-        formatear_reporte_excel(reporte).to_excel(writer, index=False, sheet_name='Reporte')
-
-    excel_buffer.seek(0)
-
-    # Botón de descarga
-    st.markdown("---")
-    st.subheader("📥 Descargar Reporte")
-    st.download_button(
-        label="📥 Descargar como Excel",
-        data=excel_buffer,
-        file_name="reporte_tiendas_formateado.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        # --- Botón de Descarga ---
+        st.markdown("---")
+        st.download_button(
+            label="📥 Descargar Reporte en Excel",
+            data=excel_buffer,
+            file_name="reporte_tiendas_formateado.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except Exception as e:
+        st.error(f"Ocurrió un error al procesar el archivo: {e}")
+        st.warning("Asegúrate de que el archivo CSV tiene las columnas esperadas (stat_date, brand_name, etc.).")
