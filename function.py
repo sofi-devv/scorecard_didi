@@ -1,5 +1,3 @@
-# function.py
-
 import pandas as pd
 import numpy as np
 
@@ -55,6 +53,7 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
     """
     Genera el scorecard. 
     ACTUALIZADO: 'Online Stores' y 'Active Stores' ahora se calculan como conteos de tiendas únicas.
+    ACTUALIZADO 2: 'p2c_total' se calcula como % del GMV.
     """
     if grouping_level not in ['brand_name', 'shop_name']:
         raise ValueError("grouping_level must be 'brand_name' or 'shop_name'")
@@ -103,10 +102,13 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
 
     # --- FIN DE LA NUEVA LÓGICA DE AGREGACIÓN ---
 
-    # <<< CAMBIO 1: CALCULAR R_BURN COMO % DEL GMV >>>
     # Se calcula después de la agregación para obtener sum(r_burn) / sum(GMV)
     # Se usa .replace(0, np.nan) para evitar errores de división por cero.
     base_semanal['r_burn'] = base_semanal['r_burn'] / base_semanal['GMV'].replace(0, np.nan)
+    
+    # <<< NUEVO: CALCULAR P2C COMO % DEL GMV >>>
+    # Lógica idéntica a r_burn: se calcula post-agregación dividiendo la suma de p2c_total por la suma de GMV.
+    base_semanal['p2c_total'] = base_semanal['p2c_total'] / base_semanal['GMV'].replace(0, np.nan)
     
     # El resto del código continúa igual, trabajando sobre el 'base_semanal' correctamente calculado.
     base_semanal['Completion rate'] = base_semanal['Complete_order_cnt'] / base_semanal['Pay_order_cnt'].replace(0, np.nan)
@@ -153,12 +155,14 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
 
 def formatear_reporte(df):
     df_formateado = df.copy()
-    metricas_pesos = ['GMV', 'Real pay price', 'Ticket_promedio', 'b2c_total', 'p2c_total'] # Se quita r_burn de aquí
     
-    # <<< CAMBIO 2: AÑADIR R_BURN A LAS MÉTRICAS DE PORCENTAJE >>>
+    # <<< MODIFICADO: Se quita 'p2c_total' de las métricas de moneda >>>
+    metricas_pesos = ['GMV', 'Real pay price', 'Ticket_promedio', 'b2c_total']
+    
+    # <<< MODIFICADO: Se añade 'p2c_total' a las métricas de porcentaje >>>
     metricas_porcentaje = [
         'Completion rate', 'B-cancel rate', 'Online Connection Rate', 
-        'D Cancel Rate', 'P Cancel Rate', 'C Cancel Rate', 'r_burn'
+        'D Cancel Rate', 'P Cancel Rate', 'C Cancel Rate', 'r_burn', 'p2c_total'
     ]
     
     semana_cols = [col for col in df.columns if isinstance(col, int)]
@@ -173,7 +177,9 @@ def formatear_reporte(df):
                     df_formateado.at[idx, col] = f"{val * 100:.1f}%"
                 elif isinstance(val, (int, float)):
                      df_formateado.at[idx, col] = f"{val:,.0f}"
+
     for col in ['WoW', 'LW_vs_Avg_L4']:
         if col in df_formateado.columns:
             df_formateado[col] = df_formateado[col].apply(lambda x: f"{x * 100:.1f}%" if pd.notnull(x) else "")
+            
     return df_formateado
