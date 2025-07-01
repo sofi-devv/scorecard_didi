@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+# La lista de métricas no necesita cambios, el orden se mantiene.
 METRICAS_ORDENADAS = [
     'Signed stores', 'Online Store', 'Active Stores', 'GMV', 'Real pay price',
     'Complete_order_cnt', 'Pay_order_cnt', 'Ticket_promedio', 'Completion rate',
@@ -11,7 +12,6 @@ METRICAS_ORDENADAS = [
 def limpiar_y_preparar_datos(df):
     """
     Limpia el DataFrame inicial.
-    CAMBIO: Se elimina el cálculo de 'Active Stores', ya que ahora se hace en la agregación.
     """
     df = df.copy()
     df.replace('-', 0, inplace=True)
@@ -52,8 +52,7 @@ def limpiar_y_preparar_datos(df):
 def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'):
     """
     Genera el scorecard. 
-    ACTUALIZADO: 'Online Stores' y 'Active Stores' ahora se calculan como conteos de tiendas únicas.
-    ACTUALIZADO 2: 'p2c_total' se calcula como % del GMV.
+    ACTUALIZADO: 'r_burn', 'p2c_total' y 'b2c_total' se calculan como % del GMV.
     """
     if grouping_level not in ['brand_name', 'shop_name']:
         raise ValueError("grouping_level must be 'brand_name' or 'shop_name'")
@@ -62,7 +61,7 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
     if grouping_level == 'shop_name':
         grouping_cols.insert(1, 'brand_name')
 
-    # --- INICIO DE LA NUEVA LÓGICA DE AGREGACIÓN ---
+    # Se agregan sumando para poder calcular los ratios post-agregación
     agregaciones_principales = {
         'shop_name': ('shop_name', 'nunique'), 
         'GMV': ('GMV', 'sum'),
@@ -99,18 +98,16 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
     }, inplace=True)
     base_semanal['Online Store'] = base_semanal['Online Store'].fillna(0).astype(int)
     base_semanal['Active Stores'] = base_semanal['Active Stores'].fillna(0).astype(int)
-
-    # --- FIN DE LA NUEVA LÓGICA DE AGREGACIÓN ---
-
-    # Se calcula después de la agregación para obtener sum(r_burn) / sum(GMV)
+    
+    # --- CÁLCULOS POST-AGREGACIÓN ---
     # Se usa .replace(0, np.nan) para evitar errores de división por cero.
     base_semanal['r_burn'] = base_semanal['r_burn'] / base_semanal['GMV'].replace(0, np.nan)
-    
-    # <<< NUEVO: CALCULAR P2C COMO % DEL GMV >>>
-    # Lógica idéntica a r_burn: se calcula post-agregación dividiendo la suma de p2c_total por la suma de GMV.
     base_semanal['p2c_total'] = base_semanal['p2c_total'] / base_semanal['GMV'].replace(0, np.nan)
     
-    # El resto del código continúa igual, trabajando sobre el 'base_semanal' correctamente calculado.
+    # <<< NUEVO: CALCULAR B2C COMO % DEL GMV >>>
+    base_semanal['b2c_total'] = base_semanal['b2c_total'] / base_semanal['GMV'].replace(0, np.nan)
+    
+    # El resto de los cálculos continúan igual
     base_semanal['Completion rate'] = base_semanal['Complete_order_cnt'] / base_semanal['Pay_order_cnt'].replace(0, np.nan)
     base_semanal['Ticket_promedio'] = base_semanal['GMV'] / base_semanal['Complete_order_cnt'].replace(0, np.nan)
     base_semanal['B-cancel rate'] = base_semanal['b_duty_cancel_order_cnt'] / base_semanal['cancel_order_cnt'].replace(0, np.nan)
@@ -154,15 +151,19 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
 
 
 def formatear_reporte(df):
+    """
+    Formatea el DataFrame final para una mejor visualización.
+    ACTUALIZADO: 'b2c_total' ahora se formatea como porcentaje.
+    """
     df_formateado = df.copy()
     
-    # <<< MODIFICADO: Se quita 'p2c_total' de las métricas de moneda >>>
-    metricas_pesos = ['GMV', 'Real pay price', 'Ticket_promedio', 'b2c_total']
+    # <<< MODIFICADO: Se quita 'b2c_total' de las métricas de moneda >>>
+    metricas_pesos = ['GMV', 'Real pay price', 'Ticket_promedio']
     
-    # <<< MODIFICADO: Se añade 'p2c_total' a las métricas de porcentaje >>>
+    # <<< MODIFICADO: Se añade 'b2c_total' a las métricas de porcentaje >>>
     metricas_porcentaje = [
         'Completion rate', 'B-cancel rate', 'Online Connection Rate', 
-        'D Cancel Rate', 'P Cancel Rate', 'C Cancel Rate', 'r_burn', 'p2c_total'
+        'D Cancel Rate', 'P Cancel Rate', 'C Cancel Rate', 'r_burn', 'p2c_total', 'b2c_total'
     ]
     
     semana_cols = [col for col in df.columns if isinstance(col, int)]
@@ -174,6 +175,7 @@ def formatear_reporte(df):
                 if metric in metricas_pesos:
                     df_formateado.at[idx, col] = f"${val:,.0f}"
                 elif metric in metricas_porcentaje:
+                    # Este formato ahora se aplicará a r_burn, p2c_total y b2c_total
                     df_formateado.at[idx, col] = f"{val * 100:.1f}%"
                 elif isinstance(val, (int, float)):
                      df_formateado.at[idx, col] = f"{val:,.0f}"
