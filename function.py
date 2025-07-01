@@ -109,7 +109,7 @@ def generar_scorecard(df_limpio, metricas_ordenadas, grouping_level='brand_name'
     
     # El resto de los cálculos continúan igual
     base_semanal['Completion rate'] = base_semanal['Complete_order_cnt'] / base_semanal['Pay_order_cnt'].replace(0, np.nan)
-    base_semanal['Ticket_promedio'] = base_semanal['GMV'] / base_semanal['Complete_order_cnt'].replace(0, np.nan)
+    base_semanal['Ticket_promedio'] = base_semanal['Real pay price'] / base_semanal['Complete_order_cnt'].replace(0, np.nan)
     base_semanal['B-cancel rate'] = base_semanal['b_duty_cancel_order_cnt'] / base_semanal['cancel_order_cnt'].replace(0, np.nan)
     
     id_vars = [grouping_level, 'week_number']
