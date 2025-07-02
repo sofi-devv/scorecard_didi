@@ -1,8 +1,6 @@
-# main.py
 import streamlit as st
 import pandas as pd
 from function import (
-    # CAMBIO 1: Importamos las nuevas funciones y la lista de métricas
     limpiar_y_preparar_datos,
     generar_scorecard,
     formatear_reporte,
@@ -10,59 +8,83 @@ from function import (
 )
 import io
 
-# --- Configuración de la página (sin cambios) ---
-st.set_page_config(page_title="Reporte de Tiendas", layout="wide")
-st.title("📊 Scorecard Semanal de Tiendas")
+# --- Configuración de la página ---
+st.set_page_config(page_title="Reporte de Marcas", layout="wide")
+st.title("📊 Scorecard Semanal por Marca")
 
-# --- Carga de Archivo ---
-uploaded_file = st.file_uploader("📂 Carga tu archivo CSV", type=["csv"])
+# --- INSTRUCCIONES PARA EL USUARIO ---
+st.markdown("---")
+st.subheader("Paso 1: Obtén tus datos del portal")
+
+st.info(
+    """
+    Haz clic en el siguiente enlace para ir al portal de análisis de DiDi.
+    Una vez allí, busca la opción para **exportar o descargar los datos como un archivo CSV o Excel.**
+    """
+)
+st.markdown(
+    "👉 **[Ir al Portal DPS de DiDi Food](https://dps-portal.intra.didiglobal.com/didifood?menuId=wM4lf-1EM&iframeRedirect=%2Fad_hoc_analysis%2Finsert.html%23%2F%3FcloneId%3D8675)**",
+    unsafe_allow_html=True
+)
+
+st.warning("⚠️ **Importante:** Debes estar conectado a la red de DiDi o a la VPN para que el enlace funcione.")
+
+
+# --- CARGA DE ARCHIVO ---
+st.markdown("---")
+st.subheader("Paso 2: Sube el archivo que descargaste")
+
+uploaded_file = st.file_uploader(
+    "📂 Arrastra o selecciona tu archivo (CSV o Excel)",
+    type=["csv", "xlsx", "xls"]
+)
 
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file)
+        file_extension = uploaded_file.name.split('.')[-1].lower()
         
-        # --- Procesamiento de Datos ---
-        # CAMBIO 2: Usamos el nuevo nombre de la función de limpieza
+        if file_extension == 'csv':
+            df = pd.read_csv(uploaded_file)
+        elif file_extension in ['xlsx', 'xls']:
+            df = pd.read_excel(uploaded_file)
+        else:
+            st.error("Formato de archivo no soportado. Por favor, sube un archivo CSV o Excel.")
+            st.stop()
+
+        # --- PROCESAMIENTO DE DATOS ---
         df_clean = limpiar_y_preparar_datos(df.copy())
 
         st.markdown("---")
-        st.header("📊 Generar Reporte Semanal")
+        st.header("📊 Reporte por Marca Generado")
         
-        tipo_reporte = st.radio(
-            "Selecciona el nivel de agregación:", 
-            ["Por Marca (brand_name)", "Por Tienda (shop_name)"]
-        )
-
-        # CAMBIO 3: Usamos la función 'generar_scorecard' para ambos casos
-        if tipo_reporte == "Por Marca (brand_name)":
-            reporte = generar_scorecard(df_clean, METRICAS_ORDENADAS, grouping_level='brand_name')
-        else:
-            reporte = generar_scorecard(df_clean, METRICAS_ORDENADAS, grouping_level='shop_name')
-
-        # CAMBIO 4: Se ELIMINA el código de ordenamiento manual.
-        # La función 'generar_scorecard' ya se encarga del ordenamiento y la estructura.
-        # Esto hace que el main.py sea mucho más limpio.
-
-        # --- Mostrar Resultados ---
+        reporte = generar_scorecard(df_clean, METRICAS_ORDENADAS, grouping_level='brand_name')
+        
+        # --- MOSTRAR RESULTADOS ---
         st.subheader("📋 Vista Previa del Reporte")
-        # CAMBIO 5: Usamos la nueva función de formato
-        st.dataframe(formatear_reporte(reporte), use_container_width=True, height=600)
+        reporte_con_estilo = formatear_reporte(reporte) # Guardamos el objeto con estilo en una variable
+        st.dataframe(reporte_con_estilo, use_container_width=True, height=600)
 
-        # Preparar archivo para descarga
+        # --- Preparar archivo para descarga en Excel ---
         excel_buffer = io.BytesIO()
-        # CAMBIO 6: Usamos la función de formato también para el Excel
-        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-            formatear_reporte(reporte).to_excel(writer, index=False, sheet_name='Reporte')
-        excel_buffer.seek(0)
 
-        # --- Botón de Descarga ---
+        ### CAMBIO CLAVE: Solución del error ###
+        # Llamamos a .to_excel() directamente sobre el objeto Styler.
+        # Esto es más simple y preserva los estilos (colores, barras) en el Excel.
+        reporte_con_estilo.to_excel(
+            excel_buffer, 
+            engine='xlsxwriter', 
+            index=False, 
+            sheet_name='Reporte por Marca'
+        )
+        
+        # --- BOTÓN DE DESCARGA ---
         st.markdown("---")
         st.download_button(
             label="📥 Descargar Reporte en Excel",
             data=excel_buffer,
-            file_name="reporte_tiendas_formateado.xlsx",
+            file_name="reporte_por_marca.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     except Exception as e:
         st.error(f"Ocurrió un error al procesar el archivo: {e}")
-        st.warning("Asegúrate de que el archivo CSV tiene las columnas esperadas (stat_date, brand_name, etc.).")
+        st.warning("Asegúrate de que el archivo que subiste tiene las columnas esperadas (stat_date, brand_name, etc.).")
